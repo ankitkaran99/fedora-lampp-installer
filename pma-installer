@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# sudo dnf install unzip wget
+
+PMA_VERSION="5.2.1"
+PMA_LANG="english"
+
+echo "Downloading phpMyAdmin-$PMA_VERSION-$PMA_LANG.zip to /opt/lampp/extra/pma.zip"
+wget -O /opt/lampp/extra/pma.zip -c "https://files.phpmyadmin.net/phpMyAdmin/$PMA_VERSION/phpMyAdmin-$PMA_VERSION-$PMA_LANG.zip"
+rm -r /var/www/phpmyadmin 2> /dev/null
+rm /etc/httpd/conf.d/pma.conf 2> /dev/null
+unzip -q -d /var/www/ /opt/lampp/extra/pma.zip
+mv "/var/www/phpMyAdmin-$PMA_VERSION-$PMA_LANG" /var/www/phpmyadmin
+cp /var/www/phpmyadmin/config.sample.inc.php /var/www/phpmyadmin/config.inc.php
+echo "phpmyadmin/config.inc.php file will be opened in nano editor, change file like this:"
+echo -e "\n   \$cfg['Servers'][\$i]['auth_type'] = 'config';\n   \$cfg['Servers'][\$i]['user'] = 'root';\n   \$cfg['Servers'][\$i]['password'] = 'root'; // use password you set earlier";
+read -p "Press enter to proceed: " USELESS_VAR
+nano "/var/www/phpmyadmin/config.inc.php"
+cp /opt/lampp/extra/pma.conf "/etc/httpd/conf.d/pma.conf"
+rm /opt/lampp/extra/pma.zip
+echo "phpMyAdmin Installation Completed."

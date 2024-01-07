@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ];then
+    echo "Please run this script as root user"
+    exit 1
+fi
+
+./lampp-vhost-list
+
+echo -e ""
+read -p "Enter Domain/Hostname (eg: myserver.local): " CERT_DOMAIN
+
+if test -f "/etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"; then
+    echo "Disabling $CERT_DOMAIN"
+    mv "/etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf" "/etc/httpd/_dismod/vhost-$CERT_DOMAIN.conf"
+elif test -f "/etc/httpd/_dismod/vhost-$CERT_DOMAIN.conf"; then
+    echo "Enabling $CERT_DOMAIN"
+    mv "/etc/httpd/_dismod/vhost-$CERT_DOMAIN.conf" "/etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
+else
+    echo "Invalid virtualhost";
+    exit 1
+fi
+
+echo "Restaring httpd"
+systemctl restart httpd

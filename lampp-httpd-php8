@@ -1,0 +1,10 @@
+#!/bin/bash
+sudo rm /etc/httpd/conf.d/phpXX-php.conf 2> /dev/null
+sudo rm /etc/httpd/conf.modules.d/15-phpXX-php.conf 2> /dev/null
+sudo ln -s /etc/httpd/_dismod/php83-php.conf /etc/httpd/conf.d/phpXX-php.conf
+sudo ln -s /etc/httpd/_dismod/15-php83-php.conf /etc/httpd/conf.modules.d/15-phpXX-php.conf
+sudo systemctl stop php74-php-fpm
+sudo systemctl disable php74-php-fpm
+sudo systemctl enable php83-php-fpm
+sudo systemctl start php83-php-fpm
+sudo systemctl restart httpd

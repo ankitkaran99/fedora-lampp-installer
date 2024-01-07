@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Enabled Virtualhost(s):"
+for filename in /etc/httpd/conf.d/vhost-*.conf; do
+    echo "$(basename $filename)" | sed 's/^vhost\-//g' | sed 's/\.conf//g'
+done
+
+echo "Disabled Virtualhost(s):"
+for filename in /etc/httpd/_dismod/vhost-*.conf; do
+    echo "$(basename $filename)" | sed 's/^vhost\-//g' | sed 's/\.conf//g'
+done

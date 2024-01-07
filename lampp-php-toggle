@@ -1,0 +1,21 @@
+#!/bin/bash
+echo 'lampp php-cli-toggle'
+echo '1. php7.4'
+echo '2. php8.3'
+read -p "Enter 1 or 2: " PHP_VERSION
+
+sudo rm /usr/bin/php 2> /dev/null
+
+case $PHP_VERSION in
+  1)
+    sudo ln -s /usr/bin/php74 /usr/bin/php
+    ;;
+
+  2)
+    sudo ln -s /usr/bin/php83 /usr/bin/php
+    ;;
+
+  *)
+    echo -n "Invalid Option."
+    ;;
+esac

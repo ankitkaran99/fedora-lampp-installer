@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ACTIVE_PHP=""
+
+if [ "$(systemctl is-enabled php83-php-fpm.service)" == "enabled" ]; then
+   ACTIVE_PHP="php83-php-fpm"
+elif [ "$(systemctl is-enabled php74-php-fpm.service)" == "enabled" ]; then
+   ACTIVE_PHP="php74-php-fpm"
+fi
+
+sudo systemctl stop httpd mariadb $ACTIVE_PHP

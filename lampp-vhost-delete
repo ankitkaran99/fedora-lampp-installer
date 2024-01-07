@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ];then
+    echo "Please run this script as root user"
+    exit 1
+fi
+
+./lampp-vhost-list
+
+echo -e ""
+read -p "Enter Domain/Hostname (eg: myserver.local): " CERT_DOMAIN
+
+if test -f "/etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"; then
+    rm "/etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
+elif test -f "/etc/httpd/_dismod/vhost-$CERT_DOMAIN.conf"; then
+    rm "/etc/httpd/_dismod/vhost-$CERT_DOMAIN.conf"
+else
+    echo "Invalid virtualhost";
+    exit 1
+fi
+
+echo "Deleting CA and Certificate of selected domain"
+rm "/opt/lampp/certs/$CERT_DOMAIN"*
+
+read -p "Delete contents of /var/www/$CERT_DOMAIN ? (y/N): " DEL_DOC_ROOT
+if [ "$DEL_DOC_ROOT" == "y" ]; then
+   rm -r "/var/www/$CERT_DOMAIN"
+fi
+
+echo "Restarting httpd"
+systemctl restart httpd

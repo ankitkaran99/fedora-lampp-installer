@@ -1,0 +1,77 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ];then
+    echo "Please run this script as root user"
+    exit 1
+fi
+
+echo "These Helper scripts will be copied to /opt/lampp"
+chmod +x ./lampp-* ./ca-gen ./cert-gen ./pma-installer ./composer
+
+rm -r /opt/lampp 2> /dev/null
+mkdir /opt/lampp
+cp -r ./* /opt/lampp/
+
+echo -e "\nInstalling Packages..."
+dnf install unzip ca-certificates openssl wget httpd mariadb-server mod_ssl
+dnf -y install "https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm"
+dnf config-manager --set-enabled remi
+dnf check-update
+dnf install php74-php php74-php-fpm php74-php-bcmath php74-php-cli php74-php-gd php74-php-gmp php74-php-intl php74-php-json php74-php-mbstring php74-php-mysqlnd php74-php-opcache php74-php-lz4 php74-php-pdo php74-php-pecl-ds php74-php-pecl-gmagick php74-php-pecl-gnupg php74-php-pecl-lzf php74-php-pecl-mysql php74-php-pecl-selinux php74-php-pecl-uuid php74-php-pecl-xdebug3 php74-php-pecl-zip php74-php-process php74-php-sodium php74-php-xml php74-php-xz php74-php-mcrypt
+dnf install php83-php php83-php-bcmath php83-php-cli php83-php-fpm php83-php-gd php83-php-gmp php83-php-intl php83-php-lz4 php83-php-mbstring php83-php-mysqlnd php83-php-opcache php83-php-pdo php83-php-pecl-ds php83-php-pecl-gmagick php83-php-pecl-gnupg php83-php-pecl-lzf php83-php-pecl-mcrypt php83-php-pecl-mysql php83-php-pecl-selinux php83-php-pecl-uuid php83-php-pecl-xdebug3 php83-php-pecl-zip php83-php-process php83-php-sodium php83-php-xml php83-php-xz
+
+echo -e "\nSetting permissions of /var/www/html"
+sudo gpasswd -a "$USER" apache
+sudo chgrp -R apache /var/www/html
+sudo chown -R "$USER" /var/www/html
+echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
+
+echo -e "\nConfiguring httpd"
+sed -i 's/^\#ServerName www\.example\.com\:80$/ServerName localhost\:80/g' /etc/httpd/conf/httpd.conf
+mkdir /etc/httpd/_dismod
+mv /etc/httpd/conf.d/php74-php.conf /etc/httpd/_dismod/php74-php.conf
+mv /etc/httpd/conf.d/php83-php.conf /etc/httpd/_dismod/php83-php.conf
+mv /etc/httpd/conf.modules.d/15-php74-php.conf /etc/httpd/_dismod/15-php74-php.conf
+mv /etc/httpd/conf.modules.d/20-php83-php.conf /etc/httpd/_dismod/15-php83-php.conf
+mv /etc/httpd/conf.d/welcome.conf /etc/httpd/_dismod/welcome.conf
+./lampp-httpd-php8
+
+echo -e "\nDisabling autostart of (httpd, mariadb) service"
+systemctl disable httpd mariadb
+
+echo -e ""
+read -p "Change mysql root password in next step, Press Enter to continue: " USELESS_VAR
+systemctl start mariadb
+mysql_secure_installation
+echo -e ""
+./pma-installer
+systemctl stop mariadb
+
+dnf install selinux-policy-targeted libselinux-utils policycoreutils
+echo -e "\nSetting SELINUX=permissive and SELINUXTYPE=targeted"
+sed -i 's/^SELINUX\=.*$/SELINUX\=permissive/g' /etc/selinux/config
+sed -i 's/^SELINUXTYPE\=.*$/SELINUXTYPE\=targeted/g' /etc/selinux/config
+fixfiles -F onboot
+echo -e "SELinux will relabel files on next reboot which will take longer time than normal boot."
+read -p "Press Enter to continue: " USELESS_VAR
+
+echo -e "\nInstalling php-composer"
+wget -O /opt/lampp/extra/composer.phar -c "https://getcomposer.org/download/latest-stable/composer.phar"
+
+echo -e "\nNext step will create virtualhost"
+./lampp-vhost-create
+
+echo -e "\nYou can edit php.ini files here: \n   /etc/opt/remi/php74/php.ini\n   /etc/opt/remi/php83/php.ini"
+read -p "Press Enter to proceed: " USELESS_VAR
+
+echo -e "\nSetting up Xdebug for Visual Studio Code"
+echo -e "[xdebug]\nzend_extension=xdebug.so\nxdebug.start_with_request=yes\nxdebug.idekey='VSCODE'\nxdebug.remote_host=localhost\nxdebug.remote_port=9003\nxdebug.file_link_format='vscode://file%f:%l'\nxdebug.filename_format='%f'\nxdebug.mode=develop" > /etc/opt/remi/php74/php.d/15-xdebug.ini
+echo -e "[xdebug]\nzend_extension=xdebug.so\nxdebug.start_with_request=yes\nxdebug.idekey='VSCODE'\nxdebug.remote_host=localhost\nxdebug.remote_port=9003\nxdebug.file_link_format='vscode://file%f:%l'\nxdebug.filename_format='%f'\nxdebug.mode=develop" > /etc/opt/remi/php83/php.d/15-xdebug.ini
+
+echo -e "\nAdd /opt/lampp to PATH\n   PATH=\"\$PATH:/opt/lampp\""
+read -p "Press Enter when done: " USELESS_VAR
+
+echo "\nInstallation Complete."
+read -p "Press Enter to Reboot: " USELESS_VAR
+
+systemctl restart

@@ -1,0 +1,80 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ];then
+    echo "Please run this script as root user"
+    exit 1
+fi
+
+read -p "Enter Domain/Hostname (eg: myserver.local): " CERT_DOMAIN
+read -p "Enter Business Email Address (john@myserver.local): " CERT_EMAIL
+read -p "Enter 2-Character Country Code (eg: US):" CERT_COUNTRY
+read -p "Enter State/Province Name (eg: California): "  CERT_STATE
+read -p "Enter City Name (eg: Los Angeles): "  CERT_CITY
+read -p "Enter Business Name (eg: Example Inc.): " CERT_BIZ
+read -p "Enter Owner Name (eg: John Doe): " CERT_USER
+
+echo -e ""
+read -p "Add Hostname ($CERT_DOMAIN) to /etc/hosts? (y/N): " ADD_HOST
+if [ "$ADD_HOST" == "y" ]; then
+   echo -e "\nEdit /etc/hosts in next step like this: "
+   echo -e "   127.0.0.1   localhost $CERT_DOMAIN\n   ::1         localhost $CERT_DOMAIN"
+   read -p "Press enter to proceed: " USELESS_VAR
+   nano /etc/hosts
+fi
+
+echo -e "\nGenerating CA and Certificate"
+mkdir /opt/lampp/certs 2> /dev/null
+./ca-gen -v -c "$CERT_COUNTRY" -s "$CERT_STATE" -l "$CERT_CITY" -o "$CERT_BIZ" -u "$CERT_USER" -n "$CERT_DOMAIN" -e "$CERT_EMAIL" "/opt/lampp/certs/$CERT_DOMAIN-CA.key" "/opt/lampp/certs/$CERT_DOMAIN-CA.crt"
+./cert-gen -v -c "$CERT_COUNTRY" -s "$CERT_STATE" -l "$CERT_CITY" -o "$CERT_BIZ" -u "$CERT_USER" -n "$CERT_DOMAIN" -e "$CERT_EMAIL" -a "localhost,$CERT_DOMAIN,*.$CERT_DOMAIN" "/opt/lampp/certs/$CERT_DOMAIN-CA.key" "/opt/lampp/certs/$CERT_DOMAIN-CA.crt" "/opt/lampp/certs/$CERT_DOMAIN.key" "/opt/lampp/certs/$CERT_DOMAIN.csr" "/opt/lampp/certs/$CERT_DOMAIN.crt"
+
+VHOST_ROOT="/var/www/$CERT_DOMAIN"
+
+mkdir -p "$VHOST_ROOT"
+sudo gpasswd -a "$USER" apache
+sudo chgrp -R apache "$VHOST_ROOT"
+sudo chown -R "$USER" "$VHOST_ROOT"
+echo "<?php phpinfo(); ?>" > "$VHOST_ROOT/phpinfo.php"
+
+echo -e "\nCreating /etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
+echo "<VirtualHost $CERT_DOMAIN:80>
+    DocumentRoot '$VHOST_ROOT'
+    ServerName '$CERT_DOMAIN'
+    ServerAdmin '$CERT_EMAIL'
+    ErrorLog 'logs/$CERT_DOMAIN-error_log'
+    TransferLog 'logs/$CERT_DOMAIN-access_log'
+</VirtualHost>
+
+<VirtualHost $CERT_DOMAIN:443>
+    DocumentRoot '$VHOST_ROOT'
+    ServerName '$CERT_DOMAIN:443'
+    ServerAdmin '$CERT_EMAIL'
+
+    SSLEngine on
+    SSLCertificateFile '/opt/lampp/certs/$CERT_DOMAIN.crt'
+    SSLCertificateKeyFile '/opt/lampp/certs/$CERT_DOMAIN.key'
+
+    <FilesMatch \"\.(cgi|shtml|phtml|php)$\">
+        SSLOptions +StdEnvVars
+    </FilesMatch>
+
+    BrowserMatch \"MSIE [2-5]\" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
+
+    ErrorLog 'logs/$CERT_DOMAIN-ssl_error_log'
+    TransferLog 'logs/$CERT_DOMAIN-ssl_access_log'
+
+    <IfModule log_config_module>
+        CustomLog \"logs/$CERT_DOMAIN-ssl_req_log\" \"%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \\\"%r\\\" %b\"
+    </IfModule>
+</VirtualHost>
+
+<Directory $VHOST_ROOT>
+    Options +Indexes +FollowSymLinks
+    AllowOverride All
+</Directory>" > "/etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
+
+echo -e "\nImport CA into Chrome or Derivatives\n   1. Open Chrome settings - scroll down and click Advanced\n   2. Find and click on Manage certificates\n   3. In the tab, navigate to AUTHORITIES\n   4. Select CA (/opt/lampp/certs/$CERT_DOMAIN-CA.crt)\n   5. Check all boxes (websites, email users, software makers)"
+echo -e "Import CA into Firefox or Derivatives\n   1. Enter “about:preferences#privacy” in firefox's address bar, and then press Enter.\n   2. Locate and click the View Certificates option.\n   3. Select Authorities tab, and then click Import.\n   4. Select the CA (/opt/lampp/certs/$CERT_DOMAIN-CA.crt) that you want to import, and then click Open.\n   5. Select Trust this CA to identify websites in the Downloading Certificate window.\n   6. Click OK to import the CA into the browser, close the window and restart firefox."
+read -p "Press Enter when done: " USELESS_VAR
+
+echo "Restarting httpd"
+systemctl restart httpd

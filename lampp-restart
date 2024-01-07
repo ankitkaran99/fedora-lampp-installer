@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ACTIVE_PHP="php83-php-fpm"
+
+if [ "$(systemctl is-enabled php83-php-fpm.service)" == "enabled" ]; then
+   ACTIVE_PHP="php83-php-fpm"
+elif [ "$(systemctl is-enabled php74-php-fpm.service)" == "enabled" ]; then
+   ACTIVE_PHP="php74-php-fpm"
+else
+   sudo systemctl enable $ACTIVE_PHP
+fi
+
+sudo systemctl restart httpd mariadb $ACTIVE_PHP
