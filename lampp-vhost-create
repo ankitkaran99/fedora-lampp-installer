@@ -31,9 +31,11 @@ mkdir /opt/lampp/certs 2> /dev/null
 VHOST_ROOT="/var/www/$CERT_DOMAIN"
 
 mkdir -p "$VHOST_ROOT"
-usermod –a –G apache "$(logname)"
-chgrp -R apache "$VHOST_ROOT"
-chown -R "$(logname)" "$VHOST_ROOT"
+usermod -aG 'apache' "$(logname)"
+chown "$(logname)":apache -R "$VHOST_ROOT"
+chmod u=rwX,g=srX,o=rX -R "$VHOST_ROOT"
+find "$VHOST_ROOT" -type d -exec chmod g=rwxs "{}" \;
+find "$VHOST_ROOT" -type f -exec chmod g=rws "{}" \;
 echo "<?php phpinfo(); ?>" > "$VHOST_ROOT/phpinfo.php"
 
 echo -e "\nCreating /etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
