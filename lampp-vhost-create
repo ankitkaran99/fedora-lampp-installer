@@ -13,14 +13,15 @@ read -p "Enter City Name (eg: Los Angeles): "  CERT_CITY
 read -p "Enter Business Name (eg: Example Inc.): " CERT_BIZ
 read -p "Enter Owner Name (eg: John Doe): " CERT_USER
 
-echo -e ""
-read -p "Add Hostname ($CERT_DOMAIN) to /etc/hosts? (y/N): " ADD_HOST
-if [ "$ADD_HOST" == "y" ]; then
-   echo -e "\nEdit /etc/hosts in next step like this: "
-   echo -e "   127.0.0.1   localhost $CERT_DOMAIN\n   ::1         localhost $CERT_DOMAIN"
-   read -p "Press enter to proceed: " USELESS_VAR
-   nano /etc/hosts
+IP_APPEND=1
+if test -f "/opt/lampp/extra/ip_append"; then
+   IP_APPEND="$(cat /opt/lampp/extra/ip_append)"
 fi
+let "IP_APPEND++"
+echo "$IP_APPEND" > /opt/lampp/extra/ip_append
+
+echo -e "\nAdding 127.0.0.$IP_APPEND\t$CERT_DOMAIN to /etc/hosts"
+echo -e "127.0.0.$IP_APPEND\t$CERT_DOMAIN" >> /etc/hosts
 
 echo -e "\nGenerating CA and Certificate"
 mkdir /opt/lampp/certs 2> /dev/null
@@ -30,13 +31,13 @@ mkdir /opt/lampp/certs 2> /dev/null
 VHOST_ROOT="/var/www/$CERT_DOMAIN"
 
 mkdir -p "$VHOST_ROOT"
-sudo gpasswd -a "$USER" apache
-sudo chgrp -R apache "$VHOST_ROOT"
-sudo chown -R "$USER" "$VHOST_ROOT"
+usermod –a –G apache "$(logname)"
+chgrp -R apache "$VHOST_ROOT"
+chown -R "$(logname)" "$VHOST_ROOT"
 echo "<?php phpinfo(); ?>" > "$VHOST_ROOT/phpinfo.php"
 
 echo -e "\nCreating /etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
-echo "<VirtualHost $CERT_DOMAIN:80>
+echo "<VirtualHost 127.0.0.$IP_APPEND:80>
     DocumentRoot '$VHOST_ROOT'
     ServerName '$CERT_DOMAIN'
     ServerAdmin '$CERT_EMAIL'
@@ -44,9 +45,9 @@ echo "<VirtualHost $CERT_DOMAIN:80>
     TransferLog 'logs/$CERT_DOMAIN-access_log'
 </VirtualHost>
 
-<VirtualHost $CERT_DOMAIN:443>
+<VirtualHost 127.0.0.$IP_APPEND:443>
     DocumentRoot '$VHOST_ROOT'
-    ServerName '$CERT_DOMAIN:443'
+    ServerName '$CERT_DOMAIN'
     ServerAdmin '$CERT_EMAIL'
 
     SSLEngine on
@@ -61,10 +62,6 @@ echo "<VirtualHost $CERT_DOMAIN:80>
 
     ErrorLog 'logs/$CERT_DOMAIN-ssl_error_log'
     TransferLog 'logs/$CERT_DOMAIN-ssl_access_log'
-
-    <IfModule log_config_module>
-        CustomLog \"logs/$CERT_DOMAIN-ssl_req_log\" \"%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \\\"%r\\\" %b\"
-    </IfModule>
 </VirtualHost>
 
 <Directory $VHOST_ROOT>

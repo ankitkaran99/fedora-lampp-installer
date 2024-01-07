@@ -27,5 +27,12 @@ if [ "$DEL_DOC_ROOT" == "y" ]; then
    rm -r "/var/www/$CERT_DOMAIN"
 fi
 
+echo -e ""
+
+read -p "Do you want to edit /etc/hosts? (y/N): " EDIT_HOSTS
+if [ "$EDIT_HOSTS" == "y" ]; then
+    nano /etc/hosts
+fi
+
 echo "Restarting httpd"
 systemctl restart httpd
