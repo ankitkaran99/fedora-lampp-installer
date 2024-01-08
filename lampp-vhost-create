@@ -39,15 +39,15 @@ find "$VHOST_ROOT" -type f -exec chmod g=rws "{}" \;
 echo "<?php phpinfo(); ?>" > "$VHOST_ROOT/phpinfo.php"
 
 echo -e "\nCreating /etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
-echo "<VirtualHost 127.0.0.$IP_APPEND:80>
+echo "<VirtualHost $CERT_DOMAIN:80>
     DocumentRoot '$VHOST_ROOT'
     ServerName '$CERT_DOMAIN'
     ServerAdmin '$CERT_EMAIL'
-    ErrorLog 'logs/$CERT_DOMAIN-error_log'
-    TransferLog 'logs/$CERT_DOMAIN-access_log'
+    ErrorLog 'logs/$CERT_DOMAIN-error.log'
+    TransferLog 'logs/$CERT_DOMAIN-access.log'
 </VirtualHost>
 
-<VirtualHost 127.0.0.$IP_APPEND:443>
+<VirtualHost $CERT_DOMAIN:443>
     DocumentRoot '$VHOST_ROOT'
     ServerName '$CERT_DOMAIN'
     ServerAdmin '$CERT_EMAIL'
@@ -62,8 +62,8 @@ echo "<VirtualHost 127.0.0.$IP_APPEND:80>
 
     BrowserMatch \"MSIE [2-5]\" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
 
-    ErrorLog 'logs/$CERT_DOMAIN-ssl_error_log'
-    TransferLog 'logs/$CERT_DOMAIN-ssl_access_log'
+    ErrorLog 'logs/$CERT_DOMAIN-ssl_error.log'
+    TransferLog 'logs/$CERT_DOMAIN-ssl_access.log'
 </VirtualHost>
 
 <Directory $VHOST_ROOT>

@@ -29,7 +29,9 @@ find "/var/www/html" -type f -exec chmod g=rws "{}" \;
 echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
 
 echo -e "\nConfiguring httpd"
-sed -i 's/^\#ServerName www\.example\.com\:80$/ServerName localhost\:80/g' /etc/httpd/conf/httpd.conf
+sed -i 's/^\#ServerName www\.example\.com\:80$/ServerName localhost/g' /etc/httpd/conf/httpd.conf
+sed -i 's/^\#ServerName www\.example\.com\:443$/ServerName localhost/g' /etc/httpd/conf.d/ssl.conf
+sed -i 's/^\#DocumentRoot \"\/var\/www\/html\"$/DocumentRoot \"\/var\/www\/html\"/g' /etc/httpd/conf.d/ssl.conf
 mkdir /etc/httpd/_dismod
 mv /etc/httpd/conf.d/php74-php.conf /etc/httpd/_dismod/php74-php.conf
 mv /etc/httpd/conf.d/php83-php.conf /etc/httpd/_dismod/php83-php.conf
