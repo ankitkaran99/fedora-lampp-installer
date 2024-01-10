@@ -20,23 +20,44 @@ dnf check-update
 dnf install php74-php php74-php-fpm php74-php-bcmath php74-php-cli php74-php-gd php74-php-gmp php74-php-intl php74-php-json php74-php-mbstring php74-php-mysqlnd php74-php-opcache php74-php-lz4 php74-php-pdo php74-php-pecl-ds php74-php-pecl-gmagick php74-php-pecl-gnupg php74-php-pecl-lzf php74-php-pecl-mysql php74-php-pecl-selinux php74-php-pecl-uuid php74-php-pecl-xdebug3 php74-php-pecl-zip php74-php-process php74-php-sodium php74-php-xml php74-php-xz php74-php-mcrypt
 dnf install php83-php php83-php-bcmath php83-php-cli php83-php-fpm php83-php-gd php83-php-gmp php83-php-intl php83-php-lz4 php83-php-mbstring php83-php-mysqlnd php83-php-opcache php83-php-pdo php83-php-pecl-ds php83-php-pecl-gmagick php83-php-pecl-gnupg php83-php-pecl-lzf php83-php-pecl-mcrypt php83-php-pecl-mysql php83-php-pecl-selinux php83-php-pecl-uuid php83-php-pecl-xdebug3 php83-php-pecl-zip php83-php-process php83-php-sodium php83-php-xml php83-php-xz
 
-echo -e "\nSetting permissions of /var/www/html"
-usermod -aG 'apache' "$(logname)"
-chown "$(logname)":apache -R "$VHOST_ROOT"
-chmod 775 -R "$VHOST_ROOT"
-echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
+echo -e "\nConfiguring httpd and php-fpm"
 
-echo -e "\nConfiguring httpd"
+chown "$(logname)":"$(logname)" -R "/var/www/html"
+chmod 775 -R "/var/www/html"
+chown "$(logname)":"$(logname)" -R "/var/log/httpd"
+chmod 775 -R "/var/log/httpd"
+
 sed -i "s/^User apache$/User $(logname)/g" /etc/httpd/conf/httpd.conf
+sed -i "s/^Group apache$/Group $(logname)/g" /etc/httpd/conf/httpd.conf
 sed -i 's/^\#ServerName www\.example\.com\:80$/ServerName localhost/g' /etc/httpd/conf/httpd.conf
 sed -i 's/^\#ServerName www\.example\.com\:443$/ServerName localhost/g' /etc/httpd/conf.d/ssl.conf
 sed -i 's/^\#DocumentRoot \"\/var\/www\/html\"$/DocumentRoot \"\/var\/www\/html\"/g' /etc/httpd/conf.d/ssl.conf
+
+chown "$(logname)":"$(logname)" -R "/var/opt/remi/php74"
+chmod 775 -R "/var/opt/remi/php74"
+sed -i "s/^user = apache$/user = $(logname)/g" /etc/opt/remi/php74/php-fpm.d/www.conf
+sed -i "s/^group = apache$/group = $(logname)/g" /etc/opt/remi/php74/php-fpm.d/www.conf
+sed -i "s/^;listen.owner =  = nobody$/listen.user = $(logname)/g" /etc/opt/remi/php74/php-fpm.d/www.conf
+sed -i "s/^;listen.group = nobody$/listen.group = $(logname)/g" /etc/opt/remi/php74/php-fpm.d/www.conf
+sed -i "s/^;listen.mode = 0660$/listen.mode = 0777/g" /etc/opt/remi/php74/php-fpm.d/www.conf
+
+chown "$(logname)":"$(logname)" -R "/var/opt/remi/php83"
+chmod 775 -R "/var/opt/remi/php83"
+sed -i "s/^user = apache$/user = $(logname)/g" /etc/opt/remi/php83/php-fpm.d/www.conf
+sed -i "s/^group = apache$/group = $(logname)/g" /etc/opt/remi/php83/php-fpm.d/www.conf
+sed -i "s/^;listen.owner =  = nobody$/listen.user = $(logname)/g" /etc/opt/remi/php83/php-fpm.d/www.conf
+sed -i "s/^;listen.group = nobody$/listen.group = $(logname)/g" /etc/opt/remi/php83/php-fpm.d/www.conf
+sed -i "s/^;listen.mode = 0660$/listen.mode = 0777/g" /etc/opt/remi/php83/php-fpm.d/www.conf
+
 mkdir /etc/httpd/_dismod
 mv /etc/httpd/conf.d/php74-php.conf /etc/httpd/_dismod/php74-php.conf
 mv /etc/httpd/conf.d/php83-php.conf /etc/httpd/_dismod/php83-php.conf
 mv /etc/httpd/conf.modules.d/15-php74-php.conf /etc/httpd/_dismod/15-php74-php.conf
 mv /etc/httpd/conf.modules.d/20-php83-php.conf /etc/httpd/_dismod/15-php83-php.conf
 mv /etc/httpd/conf.d/welcome.conf /etc/httpd/_dismod/welcome.conf
+
+echo "<?php phpinfo(); ?>" > "/var/www/html/phpinfo.php"
+
 ./lampp-httpd-php8
 
 echo -e "\nDisabling autostart of (httpd, mariadb) service"
