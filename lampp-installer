@@ -27,6 +27,7 @@ chmod 775 -R "$VHOST_ROOT"
 echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
 
 echo -e "\nConfiguring httpd"
+sed -i "s/^User apache$/User $(logname)/g" /etc/httpd/conf/httpd.conf
 sed -i 's/^\#ServerName www\.example\.com\:80$/ServerName localhost/g' /etc/httpd/conf/httpd.conf
 sed -i 's/^\#ServerName www\.example\.com\:443$/ServerName localhost/g' /etc/httpd/conf.d/ssl.conf
 sed -i 's/^\#DocumentRoot \"\/var\/www\/html\"$/DocumentRoot \"\/var\/www\/html\"/g' /etc/httpd/conf.d/ssl.conf
