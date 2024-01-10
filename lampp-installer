@@ -22,10 +22,8 @@ dnf install php83-php php83-php-bcmath php83-php-cli php83-php-fpm php83-php-gd 
 
 echo -e "\nSetting permissions of /var/www/html"
 usermod -aG 'apache' "$(logname)"
-chown "$(logname)":apache -R "/var/www/html"
-chmod u=rwX,g=srX,o=rX -R "/var/www/html"
-find "/var/www/html" -type d -exec chmod g=rwxs "{}" \;
-find "/var/www/html" -type f -exec chmod g=rws "{}" \;
+chown "$(logname)":apache -R "$VHOST_ROOT"
+chmod 775 -R "$VHOST_ROOT"
 echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
 
 echo -e "\nConfiguring httpd"
