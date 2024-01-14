@@ -21,11 +21,7 @@ dnf install php74-php php74-php-fpm php74-php-bcmath php74-php-cli php74-php-gd 
 dnf install php83-php php83-php-bcmath php83-php-cli php83-php-fpm php83-php-gd php83-php-gmp php83-php-intl php83-php-lz4 php83-php-mbstring php83-php-mysqlnd php83-php-opcache php83-php-pdo php83-php-pecl-ds php83-php-pecl-gmagick php83-php-pecl-gnupg php83-php-pecl-lzf php83-php-pecl-mcrypt php83-php-pecl-mysql php83-php-pecl-selinux php83-php-pecl-uuid php83-php-pecl-xdebug3 php83-php-pecl-zip php83-php-process php83-php-sodium php83-php-xml php83-php-xz
 
 echo -e "\nConfiguring httpd and php-fpm"
-
-chown "$(logname)":"$(logname)" -R "/var/www/html"
-chmod 775 -R "/var/www/html"
-chown "$(logname)":"$(logname)" -R "/var/log/httpd"
-chmod 775 -R "/var/log/httpd"
+./lampp-perms-fixer "/var/www/html"
 
 sed -i "s/^User apache$/User $(logname)/g" /etc/httpd/conf/httpd.conf
 sed -i "s/^Group apache$/Group $(logname)/g" /etc/httpd/conf/httpd.conf

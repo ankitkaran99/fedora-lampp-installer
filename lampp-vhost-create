@@ -31,8 +31,7 @@ mkdir /opt/lampp/certs 2> /dev/null
 VHOST_ROOT="/var/www/$CERT_DOMAIN"
 
 mkdir -p "$VHOST_ROOT"
-chown "$(logname)":"$(logname)" -R "$VHOST_ROOT"
-chmod 775 -R "$VHOST_ROOT"
+./lampp-perms-fixer "$VHOST_ROOT"
 echo "<?php phpinfo(); ?>" > "$VHOST_ROOT/phpinfo.php"
 
 echo -e "\nCreating /etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"
