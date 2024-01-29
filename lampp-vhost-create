@@ -25,13 +25,13 @@ echo -e "127.0.0.$IP_APPEND\t$CERT_DOMAIN" >> /etc/hosts
 
 echo -e "\nGenerating CA and Certificate"
 mkdir /opt/lampp/certs 2> /dev/null
-./ca-gen -v -c "$CERT_COUNTRY" -s "$CERT_STATE" -l "$CERT_CITY" -o "$CERT_BIZ" -u "$CERT_USER" -n "$CERT_DOMAIN" -e "$CERT_EMAIL" "/opt/lampp/certs/$CERT_DOMAIN-CA.key" "/opt/lampp/certs/$CERT_DOMAIN-CA.crt"
-./cert-gen -v -c "$CERT_COUNTRY" -s "$CERT_STATE" -l "$CERT_CITY" -o "$CERT_BIZ" -u "$CERT_USER" -n "$CERT_DOMAIN" -e "$CERT_EMAIL" -a "localhost,$CERT_DOMAIN,*.$CERT_DOMAIN" "/opt/lampp/certs/$CERT_DOMAIN-CA.key" "/opt/lampp/certs/$CERT_DOMAIN-CA.crt" "/opt/lampp/certs/$CERT_DOMAIN.key" "/opt/lampp/certs/$CERT_DOMAIN.csr" "/opt/lampp/certs/$CERT_DOMAIN.crt"
+/opt/lampp/ca-gen -v -c "$CERT_COUNTRY" -s "$CERT_STATE" -l "$CERT_CITY" -o "$CERT_BIZ" -u "$CERT_USER" -n "$CERT_DOMAIN" -e "$CERT_EMAIL" "/opt/lampp/certs/$CERT_DOMAIN-CA.key" "/opt/lampp/certs/$CERT_DOMAIN-CA.crt"
+/opt/lampp/cert-gen -v -c "$CERT_COUNTRY" -s "$CERT_STATE" -l "$CERT_CITY" -o "$CERT_BIZ" -u "$CERT_USER" -n "$CERT_DOMAIN" -e "$CERT_EMAIL" -a "localhost,$CERT_DOMAIN,*.$CERT_DOMAIN" "/opt/lampp/certs/$CERT_DOMAIN-CA.key" "/opt/lampp/certs/$CERT_DOMAIN-CA.crt" "/opt/lampp/certs/$CERT_DOMAIN.key" "/opt/lampp/certs/$CERT_DOMAIN.csr" "/opt/lampp/certs/$CERT_DOMAIN.crt"
 
 VHOST_ROOT="/var/www/$CERT_DOMAIN"
 
 mkdir -p "$VHOST_ROOT"
-./lampp-perms-fixer "$VHOST_ROOT"
+/opt/lampp/lampp-perms-fixer "$VHOST_ROOT"
 echo "<?php phpinfo(); ?>" > "$VHOST_ROOT/phpinfo.php"
 
 echo -e "\nCreating /etc/httpd/conf.d/vhost-$CERT_DOMAIN.conf"

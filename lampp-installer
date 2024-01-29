@@ -21,7 +21,7 @@ dnf install php74-php php74-php-fpm php74-php-bcmath php74-php-cli php74-php-gd 
 dnf install php83-php php83-php-bcmath php83-php-cli php83-php-fpm php83-php-gd php83-php-gmp php83-php-intl php83-php-lz4 php83-php-mbstring php83-php-mysqlnd php83-php-opcache php83-php-pdo php83-php-pecl-ds php83-php-pecl-gmagick php83-php-pecl-gnupg php83-php-pecl-lzf php83-php-pecl-mcrypt php83-php-pecl-mysql php83-php-pecl-selinux php83-php-pecl-uuid php83-php-pecl-xdebug3 php83-php-pecl-zip php83-php-process php83-php-sodium php83-php-xml php83-php-xz
 
 echo -e "\nConfiguring httpd and php-fpm"
-./lampp-perms-fixer "/var/www/html"
+/opt/lampp/lampp-perms-fixer "/var/www/html"
 
 sed -i "s/^User apache$/User $(logname)/g" /etc/httpd/conf/httpd.conf
 sed -i "s/^Group apache$/Group $(logname)/g" /etc/httpd/conf/httpd.conf
@@ -54,7 +54,7 @@ mv /etc/httpd/conf.d/welcome.conf /etc/httpd/_dismod/welcome.conf
 
 echo "<?php phpinfo(); ?>" > "/var/www/html/phpinfo.php"
 
-./lampp-httpd-php8
+/opt/lampp/lampp-httpd-php8
 
 echo -e "\nDisabling autostart of (httpd, mariadb) service"
 systemctl disable httpd mariadb
@@ -64,7 +64,7 @@ read -p "Change mysql root password in next step, Press Enter to continue: " USE
 systemctl start mariadb
 mysql_secure_installation
 echo -e ""
-./pma-installer
+/opt/lampp/pma-installer
 systemctl stop mariadb
 
 dnf install selinux-policy-targeted libselinux-utils policycoreutils
@@ -79,7 +79,7 @@ echo -e "\nInstalling php-composer"
 wget -O /opt/lampp/extra/composer.phar -c "https://getcomposer.org/download/latest-stable/composer.phar"
 
 echo -e "\nNext step will create virtualhost"
-./lampp-vhost-create
+/opt/lampp/lampp-vhost-create
 
 echo -e "\nYou can edit php.ini files here: \n   /etc/opt/remi/php74/php.ini\n   /etc/opt/remi/php83/php.ini"
 read -p "Press Enter to proceed: " USELESS_VAR
