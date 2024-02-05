@@ -1,9 +1,19 @@
-Different PHP Version (X.X) for Each Virtualhost, add in virtualhost's conf file:
+Different PHP Version (XX = 74, 83) for Each Virtualhost
 
-<VirtualHost *:80>
-    ....
+add this in virtualhost's conf file for both port 80 and 443:
 
-    <FilesMatch \.php$>
-        SetHandler "proxy:unix:/var/run/php/phpX.X-fpm.sock|fcgi://localhost"
-    </FilesMatch>
-</VirtualHost>
+    <VirtualHost *:80>
+        ....
+
+        <FilesMatch \.php$>
+            SetHandler "proxy:unix:/var/opt/remi/phpXX/run/php-fpm/www.sock|fcgi://localhost"
+        </FilesMatch>
+    </VirtualHost>
+
+    <VirtualHost *:443>
+        ....
+
+        <FilesMatch \.php$>
+            SetHandler "proxy:unix:/var/opt/remi/phpXX/run/php-fpm/www.sock|fcgi://localhost"
+        </FilesMatch>
+    </VirtualHost>
