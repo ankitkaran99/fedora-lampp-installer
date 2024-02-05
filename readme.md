@@ -3,11 +3,6 @@
 **Use:**
 make "lampp-installer" executable and execute it in terminal
 
-Different PHP version for each virtualhost (inside <Virtual *.*> =>
-  <FilesMatch \.php$>
-    SetHandler "proxy:unix:/var/run/php/phpX.X-fpm.sock|fcgi://localhost"
-  </FilesMatch> 
-
 **Credits:**
  - https://r00t4bl3.com/post/how-to-install-different-multiple-php-versions-of-php-in-fedora
  - https://github.com/devilbox/cert-gen
