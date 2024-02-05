@@ -1,0 +1,9 @@
+Different PHP Version (X.X) for Each Virtualhost, add in virtualhost's conf file:
+
+<VirtualHost *:80>
+    ....
+
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/var/run/php/phpX.X-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+</VirtualHost>
